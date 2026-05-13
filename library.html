@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Library Management System</title>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: Arial, sans-serif;
+    }
+
+    /* ---- UPDATED BACKGROUND WITH YOUR IMAGE ---- */
+    .bg {
+        background: url("C:/Users/Punith Gowda B K/Downloads/view-01_1_-_Photo.avif") 
+                    no-repeat center center/cover;
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .overlay {
+        background: rgba(0,0,0,0.55);
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .content {
+        position: relative;
+        z-index: 10;
+        color: white;
+        text-align: center;
+        padding-top: 80px;
+    }
+
+    button {
+        padding: 12px 25px;
+        margin: 10px;
+        border: none;
+        font-size: 18px;
+        border-radius: 5px;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-blue { background: #4169e1; }
+    .btn-green { background: #3cb371; }
+    .btn-red { background: #b22222; }
+    .btn-orange { background: #ff8c00; }
+    .btn-dark { background: #800000; }
+
+    .input-box {
+        width: 40%;
+        padding: 12px;
+        font-size: 18px;
+        margin: 8px auto;
+        display: block;
+        border-radius: 5px;
+        border: none;
+    }
+
+    table {
+        width: 85%;
+        margin: 20px auto;
+        background: white;
+        color: black;
+        border-collapse: collapse;
+        font-size: 18px;
+    }
+    table th, table td {
+        padding: 10px;
+        border: 1px solid #333;
+    }
+
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="overlay"></div>
+
+<!-- ----------- WELCOME PAGE ----------- -->
+<div id="welcomePage" class="content">
+    <h1 style="font-size:45px;">Sapthagiri NPS University Library</h1>
+    <h2 style="font-size:30px;">Welcome to Library</h2>
+    <button class="btn-blue" onclick="showRole()">Continue to Login →</button>
+</div>
+
+<!-- ----------- ROLE SELECTION PAGE ----------- -->
+<div id="rolePage" class="content hidden">
+    <h1>Select Your Role</h1>
+    <button class="btn-blue" onclick="selectRole('Admin')">Admin Login</button>
+    <button class="btn-green" onclick="selectRole('Student')">Student Login</button>
+</div>
+
+<!-- ----------- ADMIN LOGIN PAGE ----------- -->
+<div id="adminLoginPage" class="content hidden">
+    <h1>Admin Login</h1>
+
+    <input id="adminUser" class="input-box" placeholder="Admin Username">
+    <input id="adminPass" class="input-box" type="password" placeholder="Admin Password">
+
+    <button class="btn-blue" onclick="adminLogin()">Login</button>
+    <button class="btn-red" onclick="showWelcome()">Back</button>
+</div>
+
+<!-- ----------- STUDENT LOGIN PAGE ----------- -->
+<div id="studentLoginPage" class="content hidden">
+    <h1>Student Login</h1>
+
+    <input id="studentUser" class="input-box" placeholder="Student Username">
+    <input id="studentPass" class="input-box" type="password" placeholder="Student Password">
+
+    <button class="btn-blue" onclick="studentLogin()">Login</button>
+    <button class="btn-red" onclick="showWelcome()">Back</button>
+</div>
+
+<!-- ----------- LOGIN PAGE ----------- -->
+<div id="loginPage" class="content hidden">
+    <h1>Library Management System</h1>
+
+    <input id="loginUser" class="input-box" placeholder="Username">
+    <input id="loginPass" class="input-box" type="password" placeholder="Password">
+
+    <button class="btn-blue" onclick="login()">Login</button>
+    <button class="btn-green" onclick="showRegister()">Create Account</button>
+</div>
+
+<!-- ----------- REGISTER PAGE ----------- -->
+<div id="registerPage" class="content hidden">
+    <h1>Create New Account</h1>
+
+    <input id="regUser" class="input-box" placeholder="Username">
+    <input id="regPass" class="input-box" type="password" placeholder="Password">
+
+    <select id="regRole" class="input-box">
+        <option>Admin</option>
+        <option>Student</option>
+    </select>
+
+    <button class="btn-blue" onclick="register()">Register</button>
+    <button class="btn-red" onclick="showLogin()">Back</button>
+</div>
+
+<!-- ----------- DASHBOARD ----------- -->
+<div id="dashboard" class="content hidden">
+    <h1 id="dashTitle"></h1>
+
+    <table id="bookTable">
+        <thead>
+            <tr>
+                <th>Book ID</th><th>Title</th><th>Author</th>
+                <th>Available Copies</th><th>Status</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div id="adminButtons" class="hidden">
+        <button class="btn-green" onclick="addBook()">Add Book</button>
+        <button class="btn-red" onclick="deleteBook()">Delete Book</button>
+    </div>
+
+    <button class="btn-blue" onclick="borrowBook()">Borrow Book</button>
+    <button class="btn-orange" onclick="returnBook()">Return Book</button>
+    <button class="btn-dark" onclick="logout()">Logout</button>
+</div>
+
+<script>
+// ------------------ DATA ------------------
+let users = {};
+let roles = {};
+let bookList = [
+    {id:"B101", title:"Data Structures", author:"Narasimha", copies:5},
+    {id:"B102", title:"Java Programming", author:"Herbert Schildt", copies:3},
+    {id:"B103", title:"Operating System", author:"Galvin", copies:2},
+    {id:"B104", title:"Database System", author:"Ramakrishnan", copies:4},
+    {id:"B105", title:"Computer Networks", author:"Tanenbaum", copies:1}
+];
+
+let currentUser = "";
+let currentRole = "";
+
+// ------------------ Navigation ------------------
+function showWelcome() { showPage("welcomePage"); }
+function showRole() { showPage("rolePage"); }
+function showLogin() { showPage("loginPage"); }
+function showRegister() { showPage("registerPage"); }
+function showDashboard() { showPage("dashboard"); }
+
+function selectRole(role) {
+    if (role === "Admin") showPage("adminLoginPage");
+    else if (role === "Student") showPage("studentLoginPage");
+}
+
+function showPage(pageId) {
+    ["welcomePage","rolePage","adminLoginPage","studentLoginPage","loginPage","registerPage","dashboard"]
+        .forEach(id => document.getElementById(id).classList.add("hidden"));
+    document.getElementById(pageId).classList.remove("hidden");
+}
+
+// ------------------ Load/Save Data from LocalStorage ------------------
+function loadData() {
+    let savedUsers = localStorage.getItem("libraryUsers");
+    let savedRoles = localStorage.getItem("libraryRoles");
+    let savedBooks = localStorage.getItem("libraryBooks");
+
+    if (savedUsers) users = JSON.parse(savedUsers);
+    if (savedRoles) roles = JSON.parse(savedRoles);
+    if (savedBooks) bookList = JSON.parse(savedBooks);
+}
+
+function saveData() {
+    localStorage.setItem("libraryUsers", JSON.stringify(users));
+    localStorage.setItem("libraryRoles", JSON.stringify(roles));
+    localStorage.setItem("libraryBooks", JSON.stringify(bookList));
+}
+
+// Load data on page load
+window.addEventListener("DOMContentLoaded", loadData);
+
+// ------------------ Registration ------------------
+function register() {
+    let u = document.getElementById("regUser").value.trim();
+    let p = document.getElementById("regPass").value.trim();
+    let r = document.getElementById("regRole").value;
+
+    if (!u || !p) return alert("Please fill all fields!");
+
+    let pattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%?&]).{8,}$/;
+    if (!pattern.test(p))
+        return alert("Password must contain:\n- 8 chars\n- number\n- letter\n- special symbol");
+
+    if (users[u]) return alert("Username already exists!");
+
+    users[u] = p;
+    roles[u] = r;
+
+    saveData();
+    alert("Account Created Successfully!");
+    showLogin();
+}
+
+// ------------------ Login ------------------
+function adminLogin() {
+    let u = document.getElementById("adminUser").value.trim();
+    let p = document.getElementById("adminPass").value.trim();
+
+    if (users[u] === p && roles[u] === "Admin") {
+        currentUser = u;
+        currentRole = "Admin";
+
+        alert("Admin Login Successful!");
+
+        document.getElementById("dashTitle").innerText =
+            "Admin Dashboard - Library Management";
+
+        document.getElementById("adminButtons")
+            .classList.remove("hidden");
+
+        loadTable();
+        showDashboard();
+    } else {
+        alert("Invalid Admin credentials!");
+    }
+}
+
+function studentLogin() {
+    let u = document.getElementById("studentUser").value.trim();
+    let p = document.getElementById("studentPass").value.trim();
+
+    if (users[u] === p && roles[u] === "Student") {
+        currentUser = u;
+        currentRole = "Student";
+
+        alert("Student Login Successful!");
+
+        document.getElementById("dashTitle").innerText =
+            "Student Dashboard - Borrow & Return Books";
+
+        document.getElementById("adminButtons")
+            .classList.add("hidden");
+
+        loadTable();
+        showDashboard();
+    } else {
+        alert("Invalid Student credentials!");
+    }
+}
+
+function login() {
+    let u = document.getElementById("loginUser").value.trim();
+    let p = document.getElementById("loginPass").value.trim();
+
+    if (users[u] === p) {
+        currentUser = u;
+        currentRole = roles[u];
+
+        alert("Login Successful as " + currentRole);
+
+        document.getElementById("dashTitle").innerText =
+            "Library Dashboard (" + currentRole + ")";
+
+        document.getElementById("adminButtons")
+            .classList.toggle("hidden", currentRole !== "Admin");
+
+        loadTable();
+        showDashboard();
+    } else {
+        alert("Invalid username or password!");
+    }
+}
+
+// ------------------ Book Table ------------------
+function loadTable() {
+    let tbody = document.querySelector("#bookTable tbody");
+    tbody.innerHTML = "";
+
+    bookList.forEach(b => {
+        let status = b.copies > 0 ? "Available" : "Not Available";
+        tbody.innerHTML += `
+            <tr>
+                <td>${b.id}</td>
+                <td>${b.title}</td>
+                <td>${b.author}</td>
+                <td>${b.copies}</td>
+                <td style="color:${status==='Available'?'green':'red'}">${status}</td>
+            </tr>
+        `;
+    });
+}
+
+// ------------------ Admin Actions ------------------
+function addBook() {
+    let id = prompt("Enter Book ID:");
+    let title = prompt("Enter Book Title:");
+    let author = prompt("Enter Author:");
+    let copies = parseInt(prompt("Enter Number of Copies:"));
+
+    if (!id || !title || !author || isNaN(copies) || copies <= 0)
+        return alert("Invalid input!");
+
+    bookList.push({id,title,author,copies});
+    saveData();
+    loadTable();
+}
+
+function deleteBook() {
+    let id = prompt("Enter Book ID to delete:");
+
+    bookList = bookList.filter(b => b.id !== id);
+    saveData();
+    loadTable();
+}
+
+// ------------------ Borrow / Return ------------------
+function borrowBook() {
+    let id = prompt("Enter Book ID to borrow:");
+    let b = bookList.find(x => x.id === id);
+
+    if (!b) return alert("Book not found!");
+    if (b.copies === 0) return alert("No copies available!");
+
+    b.copies--;
+    saveData();
+    alert("You borrowed: " + b.title);
+    loadTable();
+}
+
+function returnBook() {
+    let id = prompt("Enter Book ID to return:");
+    let b = bookList.find(x => x.id === id);
+
+    if (!b) return alert("Book not found!");
+
+    b.copies++;
+    saveData();
+    alert("Book returned successfully!");
+    loadTable();
+}
+
+// ------------------ Logout ------------------
+function logout() {
+    currentUser = "";
+    currentRole = "";
+    showWelcome();
+}
+</script>
+
+</body>
+</html>
